@@ -4,6 +4,6 @@
 #include <array>
 #include <CL/cl_platform.h>
 
-std::vector<std::vector<cl_int>> getSunglassData();
+std::vector<std::vector<cl_int>> getSunglassData(const QString);
 
 #endif //SAME_GLASSES_DATA_H

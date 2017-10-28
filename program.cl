@@ -65,16 +65,17 @@ __kernel void calc_the_sames (
         __global int *in,
         __global int *out,
         int t_cnt,
-        int s_cnt) {
+        int s_cnt,
+        int start_n) {
 
     int p_cnt = 5;
     size_t tid = get_global_id(0);
-    int pid = tid * p_cnt;
-    int oid = tid * s_cnt;
+    int pid = (start_n + tid) * p_cnt;
+    int oid = (start_n + tid) * s_cnt;
 
     // Смещения: 0 - пол, 1 - материал, 2 - форма, 3 - цвет
     int sex = indexOf(sexes, 4, in[pid + 0]);
-    int mat = indexOf(materials, 3, in[pid + 1]);
+    int mat = indexOf(materials, 3, in[ pid + 1]);
     int shp = indexOf(shapes, 6, in[pid + 2]);
     int clr = indexOf(colors, 16, in[pid + 3]);
 
@@ -84,7 +85,7 @@ __kernel void calc_the_sames (
     for (int i = 0; i < s_cnt; i++) out[oid + i] = 0;
 
     for (int i = 0, ci = 0; i < t_cnt; i++) {
-        if (i == tid) continue; // Не будем добавлять в похожие себя
+        if (i == start_n + tid) continue; // Не будем добавлять в похожие себя
 
         long cur = sex_s[sex][indexOf(sexes, 4, in[i * p_cnt + 0])] * sex_power;
         cur += material_s[mat][indexOf(materials, 3, in[i * p_cnt + 1])] * mat_power;

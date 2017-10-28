@@ -22,22 +22,20 @@ int main(int argv, char **args) {
     ifstream file("program.cl");
     checkErr(file.is_open() ? CL_SUCCESS : 0xFF, "File program.cl is not found");
 
-    showSelectSql(app); // Показываем окно с SQL запросом
+    auto src_data = getSourceData(app); // Показываем окно с SQL запросом и получаем первичные данные в виде страницы
 
-    std::vector<std::vector<cl_int>> in_vec = getSunglassData(); // Исходные данные
+    vector<vector<cl_int>> in_vec = getSunglassData(src_data); // Получаем исходные данные
     checkErr(in_vec.size() ? CL_SUCCESS : 0xFF, "Input data is empty");
-
-    QTextEdit textEdit2;
-    textEdit2.show();
-    app.exec();
 
     const int p_cnt = in_vec[0].size(); // Количество параметров для вычисления
     size_t len = in_vec.size(); // Количество элементов для вычисления
-    cl_int in[len][s_cnt]; // Буфер с исходными данными
+    cl_int in[len][p_cnt]; // Буфер с исходными данными
     cl_int out[len][s_cnt]; // Буфер для результата
     for (int i = 0; i < in_vec.size(); i++)
         for (int j = 0; j < in_vec[i].size(); j++)
             in[i][j] = in_vec[i][j];
+
+    cout << "Input array length: " << in_vec.size() << ", setting params..." << endl;
 
     cl::Platform platforms[3];
     cl::Platform::get(platforms);
@@ -48,8 +46,8 @@ int main(int argv, char **args) {
     vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
     checkErr(devices.size() > 0 ? CL_SUCCESS : 0xFF, "devices.size() > 0");
 
-    std::string prg(std::istreambuf_iterator<char>(file), (std::istreambuf_iterator<char>()));
-    cl::Program::Sources source(1, std::make_pair(prg.c_str(), prg.length() + 1));
+    string prg(istreambuf_iterator<char>(file), (istreambuf_iterator<char>()));
+    cl::Program::Sources source(1, make_pair(prg.c_str(), prg.length() + 1));
     cl::Program program(context, source);
     checkBuild(program.build(devices, ""), program, devices[0]);
 
@@ -74,12 +72,24 @@ int main(int argv, char **args) {
     cl::CommandQueue queue(context, devices[0], 0, &err);
     checkErr(err, "CommandQueue::CommandQueue()");
 
+    cout << "Calculating started..." << endl;
+
     auto t = clock();
 
-    cl::Event event;
-    err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(len), cl::NDRange(1, 1), NULL, &event);
-    checkErr(err, "CommandQueue::enqueueNDRangeKernel()");
-    event.wait();
+    // Будем выполнять поиск пачками по 100 записей
+    auto step_count = ceil(in_vec.size() / 100.);
+    for (unsigned i = 0; i < step_count; i++) {
+        kernel.setArg(arg, i * 100);
+        checkErr(err, "Kernel::setArg(i*100)");
+
+        auto range = cl::NDRange(min(in_vec.size() - i * 100, 100u));
+        cl::Event event;
+        err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, range, cl::NDRange(1, 1), NULL, &event);
+        checkErr(err, "CommandQueue::enqueueNDRangeKernel()");
+        event.wait();
+
+        cout << "Calculated step " << i << " of " << step_count << endl;
+    }
 
     err = queue.enqueueReadBuffer(outCL, CL_TRUE, 0, len, out);
     checkErr(err, "CommandQueue::enqueueReadBuffer()");
@@ -87,11 +97,18 @@ int main(int argv, char **args) {
     t = clock() - t;
     cout << endl << "Calculating completed in " << t << " ms." << endl;
 
-    for (int i = 0; i < len; i++) {
-        cout << "{";
-        for (int j = 0; j < p_cnt; j++) cout << out[i][j] << (j + 1 == p_cnt ? "" : ", ");
-        cout << "}" << endl;
-    }
+    vector<pair<int, int>> out_vec;
+
+    for (int i = 0; i < len; i++)
+        for (int j = 0; j < s_cnt; j++)
+            out_vec.push_back(pair<int, int>(in[i][p_cnt - 1], out[i][j]));
+
+    // Отображаем выходные запросы поочередно
+    showOutputSqlStep1(app);
+    showOutputSqlStep2(app, out_vec);
+    showOutputSqlStep3(app);
+
+    cout << "Done. Press Enter to exit." << endl;
 
     file.close();
     getchar();
