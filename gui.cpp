@@ -4,7 +4,6 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QLabel>
 #include <iostream>
-#include <QtCore/QStringBuilder>
 
 QString getSourceData(const QApplication &app) {
 
@@ -14,7 +13,9 @@ QString getSourceData(const QApplication &app) {
 
     QTextEdit *textEdit = new QTextEdit;
     textEdit->setAcceptRichText(false);
-    textEdit->insertPlainText("SELECT \n"
+    textEdit->insertPlainText("Солнцезащитные очки:\n"
+                                      "\n"
+                                      "SELECT \n"
                                       "  e.property_163 AS SEX\n"
                                       ", e.property_111 AS MATERIAL\n"
                                       ", COALESCE(e.property_187, 0) AS SHAPE\n"
@@ -31,6 +32,33 @@ QString getSourceData(const QApplication &app) {
                                       "  ON e.property_187 = p187.id AND p187.property_id = 187\n"
                                       "LEFT JOIN b_iblock_property_enum AS p188\n"
                                       "  ON e.property_188 = p188.id AND p188.property_id = 188\n"
+                                      "LEFT JOIN b_iblock_property_enum AS p112\n"
+                                      "  ON e.property_112 = p112.id AND p112.property_id = 112;\n"
+                                      "\n"
+                                      "---------------------------------------------------------------\n"
+                                      "\n"
+                                      "Медицинские очки:\n"
+                                      "\n"
+                                      "SELECT \n"
+                                      "  e.property_174 AS SEX\n"
+                                      ", e.property_115 AS MATERIAL\n"
+                                      ", COALESCE(e.property_192, 0) AS SHAPE\n"
+                                      ", COALESCE(e.property_191, 0) AS COLOR\n"
+                                      ", COALESCE(e.property_190, 0) AS O_TYPE\n"
+                                      ", e.iblock_element_id\n"
+                                      "FROM b_iblock_element_prop_s5 AS e\n"
+                                      "INNER JOIN b_iblock_property_enum AS p115\n"
+                                      "  ON e.property_115 = p115.id AND p115.property_id = 115\n"
+                                      "INNER JOIN b_search_content AS c\n"
+                                      "  ON c.ITEM_ID = e.iblock_element_id\n"
+                                      "INNER JOIN b_iblock_property_enum AS p174\n"
+                                      "  ON e.property_174 = p174.id AND p174.property_id = 174\n"
+                                      "LEFT JOIN b_iblock_property_enum AS p192\n"
+                                      "  ON e.property_192 = p192.id AND p192.property_id = 192\n"
+                                      "LEFT JOIN b_iblock_property_enum AS p191\n"
+                                      "  ON e.property_191 = p191.id AND p191.property_id = 191\n"
+                                      "LEFT JOIN b_iblock_property_enum AS p190\n"
+                                      "  ON e.property_190 = p190.id AND p190.property_id = 190\n"
                                       "LEFT JOIN b_iblock_property_enum AS p112\n"
                                       "  ON e.property_112 = p112.id AND p112.property_id = 112;");
 

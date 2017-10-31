@@ -16,6 +16,8 @@ using namespace std;
 int main(int argv, char **args) {
     QApplication app(argv, args);
 
+    bool is_medical;
+
     const int s_cnt = 5; // Количество похожих для поиска
     cl_int err; // Переменная для проверки ошибок
 
@@ -24,7 +26,7 @@ int main(int argv, char **args) {
 
     auto src_data = getSourceData(app); // Показываем окно с SQL запросом и получаем первичные данные в виде страницы
 
-    vector<vector<cl_int>> in_vec = getSunglassData(src_data); // Получаем исходные данные
+    vector<vector<cl_int>> in_vec = getGlassesData(src_data, &is_medical); // Получаем исходные данные
     checkErr(in_vec.size() ? CL_SUCCESS : 0xFF, "Input data is empty");
 
     const int p_cnt = in_vec[0].size(); // Количество параметров для вычисления
@@ -51,7 +53,7 @@ int main(int argv, char **args) {
     cl::Program program(context, source);
     checkBuild(program.build(devices, ""), program, devices[0]);
 
-    cl::Kernel kernel(program, "calc_the_sames", &err);
+    cl::Kernel kernel(program, is_medical ? "calc_the_sames_med" : "calc_the_sames", &err);
     checkErr(err, "Kernel::Kernel()");
 
     cl::Buffer inCL(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, p_cnt * len * sizeof(cl_int), in, &err);

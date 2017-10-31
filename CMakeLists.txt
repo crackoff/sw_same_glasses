@@ -33,4 +33,3 @@ target_link_libraries(same_glasses
         Qt5::Network)
 
 configure_file(program.cl program.cl COPYONLY)
-configure_file(data_sun.csv data_sun.csv COPYONLY)
